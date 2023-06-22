@@ -1,34 +1,41 @@
 #!/usr/bin/python3
-""" Console Module """
+"""Defines the HBnB console."""
 import cmd
 import sys
-from models.base_model import BaseModel
-from models.__init__ import storage
-from models.user import User
-from models.place import Place
-from models.state import State
-from models.city import City
-from models.amenity import Amenity
-from models.review import Review
+from models.base_model import BaseModel  # noqa
+from models.__init__ import storage  # noqa
+from models.user import User  # noqa
+from models.state import State  # noqa
+from models.city import City  # noqa
+from models.place import Place  # noqa
+from models.amenity import Amenity  # noqa
+from models.review import Review  # noqa
 
 
 class HBNBCommand(cmd.Cmd):
-    """ Contains the functionality for the HBNB console"""
+    """Command interpreter for HBnB.
 
-    # determines prompt for interactive / non-interactive modes
-    prompt = '(hbnb) ' if sys.__stdin__.isatty() else ''
+    Attributes:
+        prompt (str): The command prompt.
+        __classes (set): The set of available class names.
+    """
 
-    classes = {
-               'BaseModel': BaseModel, 'User': User, 'Place': Place,
-               'State': State, 'City': City, 'Amenity': Amenity,
-               'Review': Review
-              }
+    prompt = "(hbnb) "
+    __classes = {
+        "BaseModel",
+        "User",
+        "State",
+        "City",
+        "Place",
+        "Amenity",
+        "Review"
+    }
     dot_cmds = ['all', 'count', 'show', 'destroy', 'update']
     types = {
-             'number_rooms': int, 'number_bathrooms': int,
-             'max_guest': int, 'price_by_night': int,
-             'latitude': float, 'longitude': float
-            }
+        'number_rooms': int, 'number_bathrooms': int,
+        'max_guest': int, 'price_by_night': int,
+        'latitude': float, 'longitude': float
+    }
 
     def preloop(self):
         """Prints if isatty is false"""
@@ -41,7 +48,6 @@ class HBNBCommand(cmd.Cmd):
         Usage: <class name>.<command>([<id> [<*args> or <**kwargs>]])
         (Brackets denote optional fields in usage example.)
         """
-
         _cmd = _cls = _id = _args = ''  # initialize line elements
 
         # scan for general formating - i.e '.', '(', ')'
@@ -81,7 +87,6 @@ class HBNBCommand(cmd.Cmd):
                         _args = pline.replace(',', '')
                         # _args = _args.replace('\"', '')
             line = ' '.join([_cmd, _cls, _id, _args])
-            print(line)
 
         except Exception as mess:
             pass
@@ -117,40 +122,23 @@ class HBNBCommand(cmd.Cmd):
 
     def do_create(self, args):
         """ Create an object of any class"""
-        if not args:
+        try:
+            if not args:
+                raise SyntaxError()
+            arg_list = args.split(" ")
+            kw = {}
+            for arg in arg_list[1:]:
+                arg_splited = arg.split("=")
+                arg_splited[1] = eval(arg_splited[1])
+                if type(arg_splited[1]) is str:
+                    arg_splited[1] = arg_splited[1].replace(
+                        "_", " ").replace('"', '\\"')
+                kw[arg_splited[0]] = arg_splited[1]
+        except SyntaxError:
             print("** class name missing **")
-            return
-        elif args.split(' ')[0] not in HBNBCommand.classes:
+        except NameError:
             print("** class doesn't exist **")
-            return
-        arglist = args.split(' ')
-        _cls = arglist[0]
-        kwarg = {}
-        for param in arglist[1:]:
-            if '=' in param:
-                _key, _val = param.split('=')
-                """_val = eval(_val)
-                if type(_val) is str:
-                    _val = _val.replace("_", " ").replace('"', '\\"')"""
-                if _val[0] == '"' and _val[-1] == '"':
-                    _val = _val[1:-1]
-                    _val = _val.replace('_', ' ')
-                    _val = _val.replace('\\', ' ')
-                    _val = str(_val)
-                elif '.' in _val:
-                    try:
-                        _val = float(_val)
-                    except Exception as mess:
-                        continue
-                elif _val:
-                    try:
-                        _val = int(_val)
-                    except Exception as mess:
-                        continue
-                kwarg[_key] = _val
-        new_instance = HBNBCommand.classes[_cls]()
-        for _key, _val in kwarg.items():
-            setattr(new_instance, _key, _val)
+        new_instance = HBNBCommand.classes[arg_list[0]](**kw)
         new_instance.save()
         print(new_instance.id)
 
@@ -215,7 +203,7 @@ class HBNBCommand(cmd.Cmd):
         key = c_name + "." + c_id
 
         try:
-            del(storage.all()[key])
+            del (storage.all()[key])
             storage.save()
         except KeyError:
             print("** no instance found **")
@@ -235,12 +223,10 @@ class HBNBCommand(cmd.Cmd):
                 print("** class doesn't exist **")
                 return
             for k, v in storage.all(HBNBCommand.classes[args]).items():
-                if k.split('.')[0] == args:
-                    print_list.append(str(v))
+                print_list.append(str(v))
         else:
             for k, v in storage.all().items():
                 print_list.append(str(v))
-
         print(print_list)
 
     def help_all(self):
