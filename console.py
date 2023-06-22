@@ -15,7 +15,7 @@ from models.review import Review
 class HBNBCommand(cmd.Cmd):
     """ Contains the functionality for the HBNB console"""
 
-    # determines prompt for interactive/non-interactive modes
+    # determines prompt for interactive / non-interactive modes
     prompt = '(hbnb) ' if sys.__stdin__.isatty() else ''
 
     classes = {
@@ -41,6 +41,7 @@ class HBNBCommand(cmd.Cmd):
         Usage: <class name>.<command>([<id> [<*args> or <**kwargs>]])
         (Brackets denote optional fields in usage example.)
         """
+
         _cmd = _cls = _id = _args = ''  # initialize line elements
 
         # scan for general formating - i.e '.', '(', ')'
@@ -80,6 +81,7 @@ class HBNBCommand(cmd.Cmd):
                         _args = pline.replace(',', '')
                         # _args = _args.replace('\"', '')
             line = ' '.join([_cmd, _cls, _id, _args])
+            print(line)
 
         except Exception as mess:
             pass
@@ -130,9 +132,10 @@ class HBNBCommand(cmd.Cmd):
                 """_val = eval(_val)
                 if type(_val) is str:
                     _val = _val.replace("_", " ").replace('"', '\\"')"""
-                if '"' in _val:
-                    _val = _val.replace('"', '')
+                if _val[0] == '"' and _val[-1] == '"':
+                    _val = _val[1:-1]
                     _val = _val.replace('_', ' ')
+                    _val = _val.replace('\\', ' ')
                     _val = str(_val)
                 elif '.' in _val:
                     try:
@@ -145,7 +148,9 @@ class HBNBCommand(cmd.Cmd):
                     except Exception as mess:
                         continue
                 kwarg[_key] = _val
-        new_instance = HBNBCommand.classes[_cls](**kwarg)
+        new_instance = HBNBCommand.classes[_cls]()
+        for _key, _val in kwarg.items():
+            setattr(new_instance, _key, _val)
         new_instance.save()
         print(new_instance.id)
 
@@ -229,11 +234,11 @@ class HBNBCommand(cmd.Cmd):
             if args not in HBNBCommand.classes:
                 print("** class doesn't exist **")
                 return
-            for k, v in storage._FileStorage__objects.items():
+            for k, v in storage.all(HBNBCommand.classes[args]).items():
                 if k.split('.')[0] == args:
                     print_list.append(str(v))
         else:
-            for k, v in storage._FileStorage__objects.items():
+            for k, v in storage.all().items():
                 print_list.append(str(v))
 
         print(print_list)
@@ -342,6 +347,7 @@ class HBNBCommand(cmd.Cmd):
         """ Help information for the update class """
         print("Updates an object with new information")
         print("Usage: update <className> <id> <attName> <attVal>\n")
+
 
 if __name__ == "__main__":
     HBNBCommand().cmdloop()
