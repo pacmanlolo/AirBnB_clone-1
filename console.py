@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-"""Defines the HBnB console."""
+"""Defines the HBnB console. husteem"""
 import cmd
 import sys
 from models.base_model import BaseModel  # noqa
